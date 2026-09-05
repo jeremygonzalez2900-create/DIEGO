@@ -54,17 +54,21 @@ else:
 # 4. Cálculo de Errores (E) y Errores al Cuadrado (e^2)
 errores = []
 errores_cuadrado = []
+y_estimadas = []
 
 if b1 is not None and b0 is not None:
     for x, y in zip(x_values, y_values):
-        y_estimada = b0 + (b1 * x)
-        e = y - y_estimada
+        y_hat = b0 + (b1 * x)
+        y_estimadas.append(y_hat)
+        e = y - y_hat
         errores.append(e)
         errores_cuadrado.append(e ** 2)
 else:
+    y_estimadas = [0.0] * n
     errores = [0.0] * n
     errores_cuadrado = [0.0] * n
 
+sum_errores = sum(errores)
 sum_errores_cuadrado = sum(errores_cuadrado)
 
 # 5. Mostrar Resultados Numéricos
@@ -76,6 +80,7 @@ df_resultados = pd.DataFrame({
     "Y": y_values,
     "X²": x_cuadrado,
     "X · Y": x_por_y,
+    "ŷ (Estimado)": y_estimadas,
     "Error (e)": errores,
     "e²": errores_cuadrado
 })
@@ -91,7 +96,6 @@ with metric_col1:
 with metric_col2:
     st.metric(label="Promedio de X (X̄)", value=f"{promedio_x:.4f}")
     st.metric(label="Promedio de Y (Ȳ)", value=f"{promedio_y:.4f}")
-    st.metric(label="Suma de Errores Cuadrados (∑e²)", value=f"{sum_errores_cuadrado:.4f}")
 
 # 6. Sección de Fórmulas Sustituidas paso a paso
 st.header("4. Desarrollo de Fórmulas (Sustitución)")
@@ -124,9 +128,27 @@ if b1 is not None and b0 is not None:
     signo = "+" if b1 >= 0 else "-"
     st.latex(r"\hat{Y} = " + f"{b0:.4f} {signo} {abs(b1):.4f}X")
 
-# Fórmula del Error
-st.subheader("Fórmula de los Residuos")
-st.latex(r"e = Y - \hat{Y}")
-st.latex(r"e^2 = (Y - \hat{Y})^2")
+# 7. Desglose de Errores Uno por Uno
+st.header("5. Cálculo de Residuos Uno por Uno")
+st.write("Fórmulas base: $e = Y - \\hat{Y}$  |  $e^2 = (Y - \\hat{Y})^2$")
+
 if b1 is not None and b0 is not None:
-    st.write("Cada uno de estos valores individuales ya se encuentra calculado fila por fila en la **Tabla de Desarrollo** de arriba.")
+    # Mostrar el desglose individual de cada muestra
+    for i in range(n):
+        st.markdown(f"**Muestra {i+1}:**")
+        col_e1, col_e2 = st.columns(2)
+        with col_e1:
+            st.latex(f"e_{{{i+1}}} = {y_values[i]:.4f} - {y_estimadas[i]:.4f} = {errores[i]:.4f}")
+        with col_e2:
+            st.latex(f"e_{{{i+1}}}^2 = ({errores[i]:.4f})^2 = {errores_cuadrado[i]:.4f}")
+    
+    # Mostrar las sumatorias de ambos términos
+    st.subheader("Sumatorias de Errores")
+    col_sum1, col_sum2 = st.columns(2)
+    with col_sum1:
+        st.latex(r"\sum e = " + f"{sum_errores:.4f}")
+        st.caption("Nota: En regresión lineal por mínimos cuadrados, la suma de los errores individuales siempre tiende a 0.")
+    with col_sum2:
+        st.latex(r"\sum e^2 = " + f"{sum_errores_cuadrado:.4f}")
+else:
+    st.error("No se pueden calcular los residuos de forma individual debido a errores en los coeficientes.")
