@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import math
 
 # Configuración del título de la aplicación
 st.title("📊 Calculadora de Regresión Lineal Completa")
@@ -51,8 +52,9 @@ else:
     b1 = None
     b0 = None
 
-# 4. Cálculo de Errores (E) y Errores al Cuadrado (e^2)
+# 4. Cálculo de Errores, Métricas (MSE, MAE, RMSE)
 errores = []
+errores_abs = []
 errores_cuadrado = []
 y_estimadas = []
 
@@ -62,27 +64,33 @@ if b1 is not None and b0 is not None:
         y_estimadas.append(y_hat)
         e = y - y_hat
         errores.append(e)
+        errores_abs.append(abs(e))
         errores_cuadrado.append(e ** 2)
 else:
     y_estimadas = [0.0] * n
     errores = [0.0] * n
+    errores_abs = [0.0] * n
     errores_cuadrado = [0.0] * n
 
 sum_errores = sum(errores)
+sum_errores_abs = sum(errores_abs)
 sum_errores_cuadrado = sum(errores_cuadrado)
+
+# Cálculo de métricas globales de error
+mae = sum_errores_abs / n if n > 0 else 0
+mse = sum_errores_cuadrado / n if n > 0 else 0
+rmse = math.sqrt(mse)
 
 # 5. Mostrar Resultados Numéricos
 st.header("3. Resultados y Cálculos")
 
-# Tabla de desarrollo detallada incluyendo Errores
+# Tabla de desarrollo detallada sin las columnas de errores
 df_resultados = pd.DataFrame({
     "X": x_values,
     "Y": y_values,
     "X²": x_cuadrado,
     "X · Y": x_por_y,
-    "ŷ (Estimado)": y_estimadas,
-    "Error (e)": errores,
-    "e²": errores_cuadrado
+    "ŷ (Estimado)": y_estimadas
 })
 st.subheader("Tabla de Desarrollo")
 st.dataframe(df_resultados)
@@ -133,7 +141,6 @@ st.header("5. Cálculo de Residuos Uno por Uno")
 st.write("Fórmulas base: $e = Y - \\hat{Y}$  |  $e^2 = (Y - \\hat{Y})^2$")
 
 if b1 is not None and b0 is not None:
-    # Mostrar el desglose individual de cada muestra
     for i in range(n):
         st.markdown(f"**Muestra {i+1}:**")
         col_e1, col_e2 = st.columns(2)
@@ -142,13 +149,36 @@ if b1 is not None and b0 is not None:
         with col_e2:
             st.latex(f"e_{{{i+1}}}^2 = ({errores[i]:.4f})^2 = {errores_cuadrado[i]:.4f}")
     
-    # Mostrar las sumatorias de ambos términos
     st.subheader("Sumatorias de Errores")
     col_sum1, col_sum2 = st.columns(2)
     with col_sum1:
         st.latex(r"\sum e = " + f"{sum_errores:.4f}")
-        st.caption("Nota: En regresión lineal por mínimos cuadrados, la suma de los errores individuales siempre tiende a 0.")
     with col_sum2:
         st.latex(r"\sum e^2 = " + f"{sum_errores_cuadrado:.4f}")
+
+    # 8. Evaluación del Modelo (MAE, MSE, RMSE)
+    st.header("6. Métricas de Evaluación de Errores Globales")
+    
+    # Mostrar tarjetas con los resultados globales
+    err_col1, err_col2, err_col3 = st.columns(3)
+    with err_col1:
+        st.metric(label="MAE", value=f"{mae:.4f}")
+    with err_col2:
+        st.metric(label="MSE", value=f"{mse:.4f}")
+    with err_col3:
+        st.metric(label="RMSE", value=f"{rmse:.4f}")
+
+    # Mostrar sustitución de fórmulas de evaluación
+    st.subheader("Fórmulas y Sustitución de Métricas")
+    
+    st.write("**MAE (Error Absoluto Medio):**")
+    st.latex(r"MAE = \frac{\sum |e|}{n} = \frac{" + f"{sum_errores_abs:.4f}" + "}{" + f"{n}" + "} = " + f"{mae:.4f}")
+    
+    st.write("**MSE (Error Cuadrático Medio):**")
+    st.latex(r"MSE = \frac{\sum e^2}{n} = \frac{" + f"{sum_errores_cuadrado:.4f}" + "}{" + f"{n}" + "} = " + f"{mse:.4f}")
+    
+    st.write("**RMSE (Raíz del Error Cuadrático Medio):**")
+    st.latex(r"RMSE = \sqrt{MSE} = \sqrt{" + f"{mse:.4f}" + "} = " + f"{rmse:.4f}")
+
 else:
-    st.error("No se pueden calcular los residuos de forma individual debido a errores en los coeficientes.")
+    st.error("No se pueden calcular las métricas debido a errores en los coeficientes.")
