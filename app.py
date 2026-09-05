@@ -86,7 +86,7 @@ st.latex(r"\bar{Y} = \frac{\sum Y}{n} = \frac{" + f"{sum_y:.4f}" + "}{" + f"{n}"
 st.subheader("Pendiente ($B_1$)")
 st.latex(r"B_1 = \frac{n\sum(XY) - (\sum X)(\sum Y)}{n\sum(X^2) - (\sum X)^2}")
 if b1 is not None:
-    st.latex(r"B_1 = \frac{" + f"{n}({sum_xy:.4f}) - ({sum_x:.4f})({sum_y:.4f})" + "}{" + f"{n}({sum_x_cuadrado:.4f}) - ({sum_x:.4f})^2}")
+    st.latex(r"B_1 = \frac{" + f"{n}({sum_xy:.4f}) - ({sum_x:.4f})({sum_y:.4f})" + "}{" + f"{n}({sum_x_cuadrado:.4f}) - ({sum_x:.4f})^2" + "}")
     st.latex(r"B_1 = \frac{" + f"{numerador_b1:.4f}" + "}{" + f"{denominador:.4f}" + "} = " + f"{b1:.4f}")
 else:
     st.error("Error: El denominador es 0. No se puede calcular B1.")
@@ -103,5 +103,4 @@ else:
 st.subheader("Ecuación de Regresión Final")
 if b1 is not None and b0 is not None:
     signo = "+" if b1 >= 0 else "-"
-    # Usamos \hat{Y} para denotar el valor estimado (signo de potencia/sombrero arriba de la Y)
     st.latex(r"\hat{Y} = " + f"{b0:.4f} {signo} {abs(b1):.4f}X")
