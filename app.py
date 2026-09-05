@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 
 # Configuración del título de la aplicación
-st.title("📊 Calculadora de Regresión Lineal ($B_1$ y $B_0$)")
+st.title("📊 Calculadora de Regresión Lineal con Fórmulas")
 
 # 1. Ingreso del número de muestras (n)
 st.header("1. Configuración de la Muestra")
@@ -41,18 +41,17 @@ x_por_y = [x * y for x, y in zip(x_values, y_values)]
 sum_xy = sum(x_por_y)
 
 # Cálculo de la pendiente (B1) e Intercepto (B0)
-# Fórmula B1 = (n*sum(xy) - sum(x)*sum(y)) / (n*sum(x^2) - (sum(x))^2)
-# Fórmula B0 = promedio_y - (B1 * promedio_x)
 denominador = (n * sum_x_cuadrado) - (sum_x ** 2)
+numerador_b1 = (n * sum_xy) - (sum_x * sum_y)
 
 if denominador != 0:
-    b1 = ((n * sum_xy) - (sum_x * sum_y)) / denominador
+    b1 = numerador_b1 / denominador
     b0 = promedio_y - (b1 * promedio_x)
 else:
     b1 = None
     b0 = None
 
-# 4. Mostrar Resultados
+# 4. Mostrar Resultados Numéricos
 st.header("3. Resultados y Cálculos")
 
 # Tabla de desarrollo detallada
@@ -65,38 +64,44 @@ df_resultados = pd.DataFrame({
 st.subheader("Tabla de Desarrollo")
 st.dataframe(df_resultados)
 
-# Mostrar métricas organizadas en contenedores
-st.subheader("Métricas Generales")
+# Métricas rápidas
 metric_col1, metric_col2 = st.columns(2)
-
 with metric_col1:
     st.metric(label="Sumatoria de X (∑X)", value=f"{sum_x:.4f}")
     st.metric(label="Sumatoria de Y (∑Y)", value=f"{sum_y:.4f}")
     st.metric(label="Sumatoria de X² (∑X²)", value=f"{sum_x_cuadrado:.4f}")
-
 with metric_col2:
     st.metric(label="Promedio de X (X̄)", value=f"{promedio_x:.4f}")
     st.metric(label="Promedio de Y (Ȳ)", value=f"{promedio_y:.4f}")
 
-st.subheader("Coeficientes de Regresión")
-coef_col1, coef_col2 = st.columns(2)
+# 5. Sección de Fórmulas Sustituidas paso a paso
+st.header("4. Desarrollo de Fórmulas (Sustitución)")
 
-with coef_col1:
-    if b1 is not None:
-        st.metric(label="Pendiente ($B_1$)", value=f"{b1:.4f}")
-    else:
-        st.metric(label="Pendiente ($B_1$)", value="Indefinida")
+# Fórmulas de Promedios
+st.subheader("Promedios")
+st.latex(r"\bar{X} = \frac{\sum X}{n} = \frac{" + f"{sum_x:.4f}" + "}{" + f"{n}" + "} = " + f"{promedio_x:.4f}")
+st.latex(r"\bar{Y} = \frac{\sum Y}{n} = \frac{" + f"{sum_y:.4f}" + "}{" + f"{n}" + "} = " + f"{promedio_y:.4f}")
 
-with coef_col2:
-    if b0 is not None:
-        st.metric(label="Intercepto ($B_0$)", value=f"{b0:.4f}")
-    else:
-        st.metric(label="Intercepto ($B_0$)", value="Indefinido")
+# Fórmula y sustitución de B1
+st.subheader("Pendiente ($B_1$)")
+st.latex(r"B_1 = \frac{n\sum(XY) - (\sum X)(\sum Y)}{n\sum(X^2) - (\sum X)^2}")
+if b1 is not None:
+    st.latex(r"B_1 = \frac{" + f"{n}({sum_xy:.4f}) - ({sum_x:.4f})({sum_y:.4f})" + "}{" + f"{n}({sum_x_cuadrado:.4f}) - ({sum_x:.4f})^2}")
+    st.latex(r"B_1 = \frac{" + f"{numerador_b1:.4f}" + "}{" + f"{denominador:.4f}" + "} = " + f"{b1:.4f}")
+else:
+    st.error("Error: El denominador es 0. No se puede calcular B1.")
 
-# Mostrar la ecuación final en formato matemático
-st.subheader("Ecuación de la Recta")
+# Fórmula y sustitución de B0
+st.subheader("Intercepto ($B_0$)")
+st.latex(r"B_0 = \bar{Y} - B_1\bar{X}")
+if b0 is not None:
+    st.latex(r"B_0 = " + f"{promedio_y:.4f} - ({b1:.4f})({promedio_x:.4f}) = {b0:.4f}")
+else:
+    st.error("Error: No se puede calcular B0 debido a la indeterminación en B1.")
+
+# Ecuación de la recta final con sombrero de predicción
+st.subheader("Ecuación de Regresión Final")
 if b1 is not None and b0 is not None:
     signo = "+" if b1 >= 0 else "-"
-    st.latex(f"Y = {b0:.4f} {signo} {abs(b1):.4f}X")
-else:
-    st.info("No se puede estructurar la ecuación debido a indeterminación matemática (división por cero).")
+    # Usamos \hat{Y} para denotar el valor estimado (signo de potencia/sombrero arriba de la Y)
+    st.latex(r"\hat{Y} = " + f"{b0:.4f} {signo} {abs(b1):.4f}X")
