@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 
 # Configuración del título de la aplicación
-st.title("📊 Calculadora de Regresión Lineal con Fórmulas")
+st.title("📊 Calculadora de Regresión Lineal Completa")
 
 # 1. Ingreso del número de muestras (n)
 st.header("1. Configuración de la Muestra")
@@ -26,7 +26,7 @@ with col2:
     edited_df_y = st.data_editor(df_y_init, num_rows="fixed", key="tabla_y")
     y_values = edited_df_y["Y"].tolist()
 
-# 3. Cálculos matemáticos
+# 3. Cálculos matemáticos iniciales
 sum_x = sum(x_values)
 sum_y = sum(y_values)
 promedio_x = sum_x / n if n > 0 else 0
@@ -51,15 +51,33 @@ else:
     b1 = None
     b0 = None
 
-# 4. Mostrar Resultados Numéricos
+# 4. Cálculo de Errores (E) y Errores al Cuadrado (e^2)
+errores = []
+errores_cuadrado = []
+
+if b1 is not None and b0 is not None:
+    for x, y in zip(x_values, y_values):
+        y_estimada = b0 + (b1 * x)
+        e = y - y_estimada
+        errores.append(e)
+        errores_cuadrado.append(e ** 2)
+else:
+    errores = [0.0] * n
+    errores_cuadrado = [0.0] * n
+
+sum_errores_cuadrado = sum(errores_cuadrado)
+
+# 5. Mostrar Resultados Numéricos
 st.header("3. Resultados y Cálculos")
 
-# Tabla de desarrollo detallada
+# Tabla de desarrollo detallada incluyendo Errores
 df_resultados = pd.DataFrame({
     "X": x_values,
     "Y": y_values,
     "X²": x_cuadrado,
-    "X · Y": x_por_y
+    "X · Y": x_por_y,
+    "Error (e)": errores,
+    "e²": errores_cuadrado
 })
 st.subheader("Tabla de Desarrollo")
 st.dataframe(df_resultados)
@@ -73,8 +91,9 @@ with metric_col1:
 with metric_col2:
     st.metric(label="Promedio de X (X̄)", value=f"{promedio_x:.4f}")
     st.metric(label="Promedio de Y (Ȳ)", value=f"{promedio_y:.4f}")
+    st.metric(label="Suma de Errores Cuadrados (∑e²)", value=f"{sum_errores_cuadrado:.4f}")
 
-# 5. Sección de Fórmulas Sustituidas paso a paso
+# 6. Sección de Fórmulas Sustituidas paso a paso
 st.header("4. Desarrollo de Fórmulas (Sustitución)")
 
 # Fórmulas de Promedios
@@ -104,3 +123,10 @@ st.subheader("Ecuación de Regresión Final")
 if b1 is not None and b0 is not None:
     signo = "+" if b1 >= 0 else "-"
     st.latex(r"\hat{Y} = " + f"{b0:.4f} {signo} {abs(b1):.4f}X")
+
+# Fórmula del Error
+st.subheader("Fórmula de los Residuos")
+st.latex(r"e = Y - \hat{Y}")
+st.latex(r"e^2 = (Y - \hat{Y})^2")
+if b1 is not None and b0 is not None:
+    st.write("Cada uno de estos valores individuales ya se encuentra calculado fila por fila en la **Tabla de Desarrollo** de arriba.")
