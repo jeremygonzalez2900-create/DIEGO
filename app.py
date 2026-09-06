@@ -1,60 +1,19 @@
 import streamlit as st
 import pandas as pd
 import math
-import re
-from PIL import Image
-import pytesseract
 
 # Configuración del título de la aplicación
 st.set_page_config(page_title="Calculadora de Regresión Lineal", layout="wide")
 st.title("📊 Calculadora de Regresión Lineal Completa")
 
-# Función para extraer pares de números (X, Y) desde texto OCR
-def extraer_datos_de_texto(texto):
-    x_vals, y_vals = [], []
-    lineas = texto.strip().split('\n')
-    for linea in lineas:
-        linea_clean = linea.replace(',', '.')
-        numeros = re.findall(r"[-+]?\d*\.?\d+", linea_clean)
-        if len(numeros) >= 2:
-            try:
-                x_vals.append(float(numeros[0]))
-                y_vals.append(float(numeros[1]))
-            except ValueError:
-                continue
-    return x_vals, y_vals
-
 # Inicialización del estado de sesión para conservar datos al actualizar
 if "x_data" not in st.session_state:
-    st.session_state.x_data = [0.0] * 5
+    st.session_state.x_data = [1.0, 2.0, 3.0, 4.0, 5.0]
 if "y_data" not in st.session_state:
-    st.session_state.y_data = [0.0] * 5
+    st.session_state.y_data = [2.0, 6.0, 10.0, 16.0, 23.0]
 
-# 1. Módulo OCR de lectura de imágenes
-st.header("1. Cargar Datos desde Foto u OCR (Opcional)")
-uploaded_file = st.file_uploader("Sube una imagen con la tabla de datos (columnas X e Y):", type=["png", "jpg", "jpeg"])
-
-if uploaded_file is not None:
-    try:
-        image = Image.open(uploaded_file)
-        st.image(image, caption="Imagen cargada", width=300)
-        
-        texto_extraido = pytesseract.image_to_string(image)
-        x_parsed, y_parsed = extraer_datos_de_texto(texto_extraido)
-        
-        if x_parsed and y_parsed:
-            st.success(f"¡Se detectaron {len(x_parsed)} filas de datos!")
-            if st.button("Aplicar datos de la imagen"):
-                st.session_state.x_data = x_parsed
-                st.session_state.y_data = y_parsed
-                st.rerun()
-        else:
-            st.warning("No se pudieron extraer pares numéricos (X, Y) claros de la imagen.")
-    except Exception as e:
-        st.error(f"Error al procesar la imagen: {e}. Verifica que Tesseract OCR esté instalado en tu sistema.")
-
-# 2. Configuración de Muestra y Tablas de Datos
-st.header("2. Configuración e Ingreso de Datos")
+# 1. Configuración de Muestra y Tablas de Datos
+st.header("1. Configuración e Ingreso de Datos")
 
 n_default = len(st.session_state.x_data)
 n = st.number_input("Número de muestras (n):", min_value=1, value=n_default, step=1)
@@ -81,7 +40,11 @@ with col2:
     edited_df_y = st.data_editor(df_y_init, num_rows="fixed", key="tabla_y")
     y_values = edited_df_y["Y"].tolist()
 
-# 3. Cálculos matemáticos iniciales
+# Actualizar el estado de sesión con los valores editados
+st.session_state.x_data = x_values
+st.session_state.y_data = y_values
+
+# 2. Cálculos matemáticos iniciales
 sum_x = sum(x_values)
 sum_y = sum(y_values)
 promedio_x = sum_x / n if n > 0 else 0
@@ -103,7 +66,7 @@ else:
     b1 = None
     b0 = None
 
-# 4. Cálculo de Errores y Métricas
+# 3. Cálculo de Errores y Métricas
 errores = []
 errores_abs = []
 errores_cuadrado = []
@@ -132,8 +95,8 @@ mse = sum_errores_cuadrado / n if n > 0 else 0
 rmse = math.sqrt(mse)
 rmse_mae_ratio = (rmse / mae) if mae > 0 else 0.0
 
-# 5. Mostrar Resultados Numéricos
-st.header("3. Resultados y Cálculos")
+# 4. Mostrar Resultados Numéricos
+st.header("2. Resultados y Cálculos")
 
 df_resultados = pd.DataFrame({
     "X": x_values,
@@ -154,8 +117,8 @@ with metric_col2:
     st.metric(label="Promedio de X (X̄)", value=f"{promedio_x:.4f}")
     st.metric(label="Promedio de Y (Ȳ)", value=f"{promedio_y:.4f}")
 
-# 6. Desarrollo de Fórmulas Paso a Paso
-st.header("4. Desarrollo de Fórmulas (Sustitución)")
+# 5. Desarrollo de Fórmulas Paso a Paso
+st.header("3. Desarrollo de Fórmulas (Sustitución)")
 
 st.subheader("Promedios")
 st.latex(r"\bar{X} = \frac{\sum X}{n} = \frac{" + f"{sum_x:.4f}" + "}{" + f"{n}" + "} = " + f"{promedio_x:.4f}")
@@ -179,8 +142,8 @@ if b1 is not None and b0 is not None:
     signo = "+" if b1 >= 0 else "-"
     st.latex(r"\hat{Y} = " + f"{b0:.4f} {signo} {abs(b1):.4f}X")
 
-# 7. Residuos Uno por Uno
-st.header("5. Cálculo de Residuos Uno por Uno")
+# 6. Residuos Uno por Uno
+st.header("4. Cálculo de Residuos Uno por Uno")
 st.write("Fórmulas base: $e = Y - \\hat{Y}$  |  $e^2 = (Y - \\hat{Y})^2$")
 
 if b1 is not None and b0 is not None:
@@ -199,8 +162,8 @@ if b1 is not None and b0 is not None:
     with col_sum2:
         st.latex(r"\sum e^2 = " + f"{sum_errores_cuadrado:.4f}")
 
-    # 8. Evaluación del Modelo (MAE, MSE, RMSE, RMSE / MAE)
-    st.header("6. Métricas de Evaluación de Errores Globales")
+    # 7. Evaluación del Modelo (MAE, MSE, RMSE, RMSE / MAE)
+    st.header("5. Métricas de Evaluación de Errores Globales")
     
     err_col1, err_col2, err_col3, err_col4 = st.columns(4)
     with err_col1:
@@ -230,5 +193,4 @@ if b1 is not None and b0 is not None:
         st.info("No se puede dividir entre cero (MAE = 0).")
 
 else:
-    st.error("No se pueden calcular las métricas debido a errores en los coeficientes.")
- 
+    st.error("No se pueden calcular las métricas debido a errores en los coeficientes.") 
