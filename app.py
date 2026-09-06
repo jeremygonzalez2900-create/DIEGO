@@ -180,4 +180,3 @@ if b1 is not None and b0 is not None:
     st.latex(rf"RMSE = \sqrt{{MSE}} = \sqrt{{{mse:.4f}}} = {rmse:.4f}")
 else:
     st.error("No se pueden calcular las métricas debido a errores en los coeficientes.")
- 
