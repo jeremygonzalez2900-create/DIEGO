@@ -3,59 +3,45 @@ import pandas as pd
 import math
 
 # Configuración del título de la aplicación
-st.set_page_config(page_title="Calculadora de Regresión Lineal", layout="wide")
 st.title("📊 Calculadora de Regresión Lineal Completa")
 
-# Inicialización del estado de sesión para conservar datos al actualizar
-if "x_data" not in st.session_state:
-    st.session_state.x_data = [1.0, 2.0, 3.0, 4.0, 5.0]
-if "y_data" not in st.session_state:
-    st.session_state.y_data = [2.0, 6.0, 10.0, 16.0, 23.0]
+# 1. Ingreso del número de muestras (n)
+st.header("1. Configuración de la Muestra")
+n = st.number_input("Ingrese el número de muestras (n):", min_value=1, value=5, step=1)
 
-# 1. Configuración de Muestra y Tablas de Datos
-st.header("1. Configuración e Ingreso de Datos")
+st.header("2. Ingreso de Datos")
+st.write("Modifique los valores directamente en las tablas siguientes:")
 
-n_default = len(st.session_state.x_data)
-n = st.number_input("Número de muestras (n):", min_value=1, value=n_default, step=1)
-
-# Ajustar listas de estado al cambiar 'n'
-if len(st.session_state.x_data) < n:
-    st.session_state.x_data.extend([0.0] * (n - len(st.session_state.x_data)))
-    st.session_state.y_data.extend([0.0] * (n - len(st.session_state.y_data)))
-elif len(st.session_state.x_data) > n:
-    st.session_state.x_data = st.session_state.x_data[:n]
-    st.session_state.y_data = st.session_state.y_data[:n]
-
+# Crear dos columnas para mostrar las tablas independientes lado a lado
 col1, col2 = st.columns(2)
 
 with col1:
     st.subheader("Valores de X")
-    df_x_init = pd.DataFrame({"X": st.session_state.x_data})
+    df_x_init = pd.DataFrame({"X": [0.0] * n})
     edited_df_x = st.data_editor(df_x_init, num_rows="fixed", key="tabla_x")
     x_values = edited_df_x["X"].tolist()
 
 with col2:
     st.subheader("Valores de Y")
-    df_y_init = pd.DataFrame({"Y": st.session_state.y_data})
+    df_y_init = pd.DataFrame({"Y": [0.0] * n})
     edited_df_y = st.data_editor(df_y_init, num_rows="fixed", key="tabla_y")
     y_values = edited_df_y["Y"].tolist()
 
-# Actualizar el estado de sesión con los valores editados
-st.session_state.x_data = x_values
-st.session_state.y_data = y_values
-
-# 2. Cálculos matemáticos iniciales
+# 3. Cálculos matemáticos iniciales
 sum_x = sum(x_values)
 sum_y = sum(y_values)
 promedio_x = sum_x / n if n > 0 else 0
 promedio_y = sum_y / n if n > 0 else 0
 
+# X al cuadrado y su sumatoria
 x_cuadrado = [x ** 2 for x in x_values]
 sum_x_cuadrado = sum(x_cuadrado)
 
+# Producto X*Y y su sumatoria
 x_por_y = [x * y for x, y in zip(x_values, y_values)]
 sum_xy = sum(x_por_y)
 
+# Cálculo de la pendiente (B1) e Intercepto (B0)
 denominador = (n * sum_x_cuadrado) - (sum_x ** 2)
 numerador_b1 = (n * sum_xy) - (sum_x * sum_y)
 
@@ -66,7 +52,7 @@ else:
     b1 = None
     b0 = None
 
-# 3. Cálculo de Errores y Métricas
+# 4. Cálculo de Errores, Métricas (MSE, MAE, RMSE)
 errores = []
 errores_abs = []
 errores_cuadrado = []
@@ -90,14 +76,15 @@ sum_errores = sum(errores)
 sum_errores_abs = sum(errores_abs)
 sum_errores_cuadrado = sum(errores_cuadrado)
 
+# Cálculo de métricas globales de error
 mae = sum_errores_abs / n if n > 0 else 0
 mse = sum_errores_cuadrado / n if n > 0 else 0
 rmse = math.sqrt(mse)
-rmse_mae_ratio = (rmse / mae) if mae > 0 else 0.0
 
-# 4. Mostrar Resultados Numéricos
-st.header("2. Resultados y Cálculos")
+# 5. Mostrar Resultados Numéricos
+st.header("3. Resultados y Cálculos")
 
+# Tabla de desarrollo detallada sin las columnas de errores
 df_resultados = pd.DataFrame({
     "X": x_values,
     "Y": y_values,
@@ -108,6 +95,7 @@ df_resultados = pd.DataFrame({
 st.subheader("Tabla de Desarrollo")
 st.dataframe(df_resultados)
 
+# Métricas rápidas
 metric_col1, metric_col2 = st.columns(2)
 with metric_col1:
     st.metric(label="Sumatoria de X (∑X)", value=f"{sum_x:.4f}")
@@ -117,13 +105,15 @@ with metric_col2:
     st.metric(label="Promedio de X (X̄)", value=f"{promedio_x:.4f}")
     st.metric(label="Promedio de Y (Ȳ)", value=f"{promedio_y:.4f}")
 
-# 5. Desarrollo de Fórmulas Paso a Paso
-st.header("3. Desarrollo de Fórmulas (Sustitución)")
+# 6. Sección de Fórmulas Sustituidas paso a paso
+st.header("4. Desarrollo de Fórmulas (Sustitución)")
 
+# Fórmulas de Promedios
 st.subheader("Promedios")
 st.latex(r"\bar{X} = \frac{\sum X}{n} = \frac{" + f"{sum_x:.4f}" + "}{" + f"{n}" + "} = " + f"{promedio_x:.4f}")
 st.latex(r"\bar{Y} = \frac{\sum Y}{n} = \frac{" + f"{sum_y:.4f}" + "}{" + f"{n}" + "} = " + f"{promedio_y:.4f}")
 
+# Fórmula y sustitución de B1
 st.subheader("Pendiente ($B_1$)")
 st.latex(r"B_1 = \frac{n\sum(XY) - (\sum X)(\sum Y)}{n\sum(X^2) - (\sum X)^2}")
 if b1 is not None:
@@ -132,18 +122,22 @@ if b1 is not None:
 else:
     st.error("Error: El denominador es 0. No se puede calcular B1.")
 
+# Fórmula y sustitución de B0
 st.subheader("Intercepto ($B_0$)")
 st.latex(r"B_0 = \bar{Y} - B_1\bar{X}")
 if b0 is not None:
     st.latex(r"B_0 = " + f"{promedio_y:.4f} - ({b1:.4f})({promedio_x:.4f}) = {b0:.4f}")
+else:
+    st.error("Error: No se puede calcular B0 debido a la indeterminación en B1.")
 
+# Ecuación de la recta final con sombrero de predicción
 st.subheader("Ecuación de Regresión Final")
 if b1 is not None and b0 is not None:
     signo = "+" if b1 >= 0 else "-"
     st.latex(r"\hat{Y} = " + f"{b0:.4f} {signo} {abs(b1):.4f}X")
 
-# 6. Residuos Uno por Uno
-st.header("4. Cálculo de Residuos Uno por Uno")
+# 7. Desglose de Errores Uno por Uno
+st.header("5. Cálculo de Residuos Uno por Uno")
 st.write("Fórmulas base: $e = Y - \\hat{Y}$  |  $e^2 = (Y - \\hat{Y})^2$")
 
 if b1 is not None and b0 is not None:
@@ -162,19 +156,19 @@ if b1 is not None and b0 is not None:
     with col_sum2:
         st.latex(r"\sum e^2 = " + f"{sum_errores_cuadrado:.4f}")
 
-    # 7. Evaluación del Modelo (MAE, MSE, RMSE, RMSE / MAE)
-    st.header("5. Métricas de Evaluación de Errores Globales")
+    # 8. Evaluación del Modelo (MAE, MSE, RMSE)
+    st.header("6. Métricas de Evaluación de Errores Globales")
     
-    err_col1, err_col2, err_col3, err_col4 = st.columns(4)
+    # Mostrar tarjetas con los resultados globales
+    err_col1, err_col2, err_col3 = st.columns(3)
     with err_col1:
         st.metric(label="MAE", value=f"{mae:.4f}")
     with err_col2:
         st.metric(label="MSE", value=f"{mse:.4f}")
     with err_col3:
         st.metric(label="RMSE", value=f"{rmse:.4f}")
-    with err_col4:
-        st.metric(label="RMSE / MAE", value=f"{rmse_mae_ratio:.4f}")
 
+    # Mostrar sustitución de fórmulas de evaluación
     st.subheader("Fórmulas y Sustitución de Métricas")
     
     st.write("**MAE (Error Absoluto Medio):**")
@@ -186,11 +180,5 @@ if b1 is not None and b0 is not None:
     st.write("**RMSE (Raíz del Error Cuadrático Medio):**")
     st.latex(r"RMSE = \sqrt{MSE} = \sqrt{" + f"{mse:.4f}" + "} = " + f"{rmse:.4f}")
 
-    st.write("**Relación RMSE / MAE:**")
-    if mae > 0:
-        st.latex(r"\frac{RMSE}{MAE} = \frac{" + f"{rmse:.4f}" + "}{" + f"{mae:.4f}" + "} = " + f"{rmse_mae_ratio:.4f}")
-    else:
-        st.info("No se puede dividir entre cero (MAE = 0).")
-
 else:
-    st.error("No se pueden calcular las métricas debido a errores en los coeficientes.") 
+    st.error("No se pueden calcular las métricas debido a errores en los coeficientes.")
