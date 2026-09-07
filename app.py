@@ -12,7 +12,7 @@ st.set_page_config(
 )
 
 st.title("📊 Calculadora de Regresión Lineal Completa")
-st.caption("Herramienta paso a paso para el análisis, cálculo de coeficientes y evaluación de residuos.")
+st.caption("Herramienta paso a paso para el análisis, cálculo de coeficientes, evaluación de residuos y predicciones.")
 
 # ---------------------------------------------------------
 # Estado de Sesión
@@ -229,5 +229,40 @@ if b1 is not None and b0 is not None:
         else:
             st.info("No se puede dividir entre cero (MAE = 0).")
 
+    st.divider()
+
+    # ---------------------------------------------------------
+    # 8. Estimador / Predicción Externa
+    # ---------------------------------------------------------
+    st.header("6. Predicción de Valores Nuevos (Fuera de la Muestra)")
+    st.caption("Usa el modelo ajustado para estimar nuevos valores de $Y$ o despejar $X$.")
+
+    pred_col1, pred_col2 = st.columns(2)
+
+    with pred_col1:
+        st.subheader("1. Estimar $\\hat{Y}$ dado un valor de $X$")
+        x_nuevo = st.number_input("Ingresa un valor para X:", value=6.0, step=0.5, key="input_x_pred")
+        
+        y_pred = b0 + (b1 * x_nuevo)
+        
+        st.markdown("**Sustitución en el modelo:**")
+        st.latex(r"\hat{Y} = B_0 + B_1(X)")
+        st.latex(f"\\hat{{Y}} = {b0:.4f} + ({b1:.4f} \\times {x_nuevo:.4f})")
+        st.metric(label=f"Valor estimado de Y para X = {x_nuevo}", value=f"{y_pred:.4f}")
+
+    with pred_col2:
+        st.subheader("2. Despejar $X$ dado un valor de $Y$")
+        y_nuevo = st.number_input("Ingresa un valor para Y:", value=25.0, step=0.5, key="input_y_pred")
+        
+        if b1 != 0:
+            x_pred = (y_nuevo - b0) / b1
+            
+            st.markdown("**Despeje en el modelo:**")
+            st.latex(r"X = \frac{Y - B_0}{B_1}")
+            st.latex(f"X = \\frac{{{y_nuevo:.4f} - ({b0:.4f})}}{{{b1:.4f}}}")
+            st.metric(label=f"Valor estimado de X para Y = {y_nuevo}", value=f"{x_pred:.4f}")
+        else:
+            st.warning("No se puede despejar X porque la pendiente (B1) es igual a 0.")
+
 else:
-    st.error("No se pueden calcular las métricas debido a errores en los coeficientes.")
+    st.error("No se pueden realizar predicciones debido a errores en los coeficientes.")
