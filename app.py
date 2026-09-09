@@ -11,6 +11,61 @@ st.set_page_config(
     page_icon="📊"
 )
 
+# ---------------------------------------------------------
+# Estilos Monocromáticos Azules (CSS Personalizado)
+# ---------------------------------------------------------
+custom_css = """
+<style>
+    /* Fondo principal con degradado azul */
+    .stApp {
+        background: linear-gradient(135deg, #0a192f 0%, #0f2b48 50%, #1e3a8a 100%);
+        color: #e0f2fe;
+    }
+
+    /* Estilo monocromático para tarjetas de métricas */
+    div[data-testid="stMetric"] {
+        background-color: rgba(15, 23, 42, 0.65);
+        border: 1px solid #2563eb;
+        border-radius: 10px;
+        padding: 12px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+    }
+
+    div[data-testid="stMetricLabel"] {
+        color: #93c5fd !important;
+        font-weight: 600;
+    }
+
+    div[data-testid="stMetricValue"] {
+        color: #ffffff !important;
+    }
+
+    /* Tablas e inputs adaptados al tema azul */
+    .stDataFrame, div[data-baseweb="data-table"] {
+        background-color: rgba(15, 23, 42, 0.5) !important;
+        border-radius: 8px;
+    }
+
+    /* Cuadros de mensajes / banners en azul */
+    div[data-testid="stNotification"] {
+        background-color: rgba(30, 58, 138, 0.8) !important;
+        color: #e0f2fe !important;
+        border: 1px solid #3b82f6 !important;
+    }
+
+    /* Encabezados y títulos */
+    h1, h2, h3, h4 {
+        color: #60a5fa !important;
+    }
+
+    /* Líneas divisorias */
+    hr {
+        border-color: #1d4ed8 !important;
+    }
+</style>
+"""
+st.markdown(custom_css, unsafe_allow_html=True)
+
 st.title("📊 Calculadora de Regresión Lineal Completa")
 st.caption("Herramienta paso a paso para el análisis, cálculo de coeficientes, evaluación de residuos y predicciones.")
 
@@ -179,7 +234,7 @@ if b0 is not None:
 
 if b1 is not None and b0 is not None:
     signo = "+" if b1 >= 0 else "-"
-    st.success(f"### Ecuación de Regresión Final:  $\\hat{{Y}} = {b0:.4f} {signo} {abs(b1):.4f}X$")
+    st.info(f"### Ecuación de Regresión Final:  $\\hat{{Y}} = {b0:.4f} {signo} {abs(b1):.4f}X$")
 
 st.divider()
 
