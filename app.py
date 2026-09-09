@@ -87,6 +87,7 @@ errores = []
 errores_abs = []
 errores_cuadrado = []
 y_estimadas = []
+errores_pct_abs = []
 
 if b1 is not None and b0 is not None:
     for x, y in zip(x_values, y_values):
@@ -96,19 +97,28 @@ if b1 is not None and b0 is not None:
         errores.append(e)
         errores_abs.append(abs(e))
         errores_cuadrado.append(e ** 2)
+        
+        # Evitar división por cero al calcular error porcentual (|e| / |y|)
+        if y != 0:
+            errores_pct_abs.append(abs(e / y))
+        else:
+            errores_pct_abs.append(0.0)
 else:
     y_estimadas = [0.0] * n
     errores = [0.0] * n
     errores_abs = [0.0] * n
     errores_cuadrado = [0.0] * n
+    errores_pct_abs = [0.0] * n
 
 sum_errores = sum(errores)
 sum_errores_abs = sum(errores_abs)
 sum_errores_cuadrado = sum(errores_cuadrado)
+sum_errores_pct_abs = sum(errores_pct_abs)
 
 mae = sum_errores_abs / n if n > 0 else 0
 mse = sum_errores_cuadrado / n if n > 0 else 0
 rmse = math.sqrt(mse)
+mape = (sum_errores_pct_abs / n) * 100 if n > 0 else 0
 rmse_mae_ratio = (rmse / mae) if mae > 0 else 0.0
 
 st.divider()
@@ -198,15 +208,16 @@ if b1 is not None and b0 is not None:
     st.divider()
 
     # ---------------------------------------------------------
-    # 7. Evaluación del Modelo (MAE, MSE, RMSE, RMSE / MAE)
+    # 7. Evaluación del Modelo (MAE, MSE, RMSE, MAPE, RMSE / MAE)
     # ---------------------------------------------------------
     st.header("5. Métricas de Evaluación de Errores Globales")
     
-    err_col1, err_col2, err_col3, err_col4 = st.columns(4)
+    err_col1, err_col2, err_col3, err_col4, err_col5 = st.columns(5)
     err_col1.metric(label="MAE", value=f"{mae:.4f}")
     err_col2.metric(label="MSE", value=f"{mse:.4f}")
     err_col3.metric(label="RMSE", value=f"{rmse:.4f}")
-    err_col4.metric(label="RMSE / MAE", value=f"{rmse_mae_ratio:.4f}")
+    err_col4.metric(label="MAPE", value=f"{mape:.2f}%")
+    err_col5.metric(label="RMSE / MAE", value=f"{rmse_mae_ratio:.4f}")
 
     st.subheader("Fórmulas y Sustitución de Métricas")
     
@@ -222,6 +233,9 @@ if b1 is not None and b0 is not None:
     with col_m2:
         st.write("**MSE (Error Cuadrático Medio):**")
         st.latex(r"MSE = \frac{\sum e^2}{n} = \frac{" + f"{sum_errores_cuadrado:.4f}" + "}{" + f"{n}" + "} = " + f"{mse:.4f}")
+
+        st.write("**MAPE (Error Porcentual Absoluto Medio):**")
+        st.latex(r"MAPE = \left( \frac{1}{n} \sum \left| \frac{Y - \hat{Y}}{Y} \right| \right) \times 100 = " + f"{mape:.2f}\%")
 
         st.write("**Relación RMSE / MAE:**")
         if mae > 0:
